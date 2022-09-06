@@ -1,5 +1,6 @@
+from datetime import timedelta
 from functools import wraps
-from flask import Flask, render_template, redirect, url_for, flash, request, abort
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, session
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
@@ -14,6 +15,13 @@ SECRET_KEY = os.urandom(30)
 app.secret_key = SECRET_KEY
 Bootstrap(app)
 # csrf = CSRFProtect(app)
+
+# this will force the user to re-login after 30 minutes
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=30)
+
 
 # CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cafes.db'
@@ -71,6 +79,7 @@ def admin_only(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -186,13 +195,13 @@ def suggest_cafe():
             return redirect(url_for('suggest_cafe'))
         else:
             new_cafe = Cafe_Suggestions(
-            cafe_name=cafe_name,
-            cafe_address=cafe_address,
-            hours=hours,
-            avg_price=avg_price,
-            address_link=address_link,
-            image_link=image_link
-        )
+                cafe_name=cafe_name,
+                cafe_address=cafe_address,
+                hours=hours,
+                avg_price=avg_price,
+                address_link=address_link,
+                image_link=image_link
+            )
         db.session.add(new_cafe)
         db.session.commit()
         return redirect(url_for("cafes"))
@@ -242,8 +251,8 @@ def add_suggestions_to_db(id):
         Cafe_Suggestions.query.filter_by(id=suggested_cafe.id).delete()
         db.session.commit()
 
-
     return redirect(url_for("cafes"))
+
 
 # this deletes the specified café from the explore cafe section
 @app.route('/delete/<cafe_id>')
@@ -255,6 +264,7 @@ def delete(cafe_id):
     db.session.commit()
     flash(message='Cafe deleted successfully')
     return redirect(url_for('cafes'))
+
 
 @app.route('/logout')
 @login_required
