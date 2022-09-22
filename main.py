@@ -7,14 +7,13 @@ from flask_login import UserMixin, login_user, LoginManager, current_user, logou
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
-# from flask_wtf.csrf import CSRFProtect
-
-
 app = Flask(__name__)
 SECRET_KEY = os.urandom(30)
 app.secret_key = SECRET_KEY
 Bootstrap(app)
-# csrf = CSRFProtect(app)
+
+
+# csrfs = CSRFProtect(app)
 
 # this will force the user to re-login after 30 minutes
 @app.before_request
